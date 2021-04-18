@@ -31,5 +31,5 @@ def my_func2(x, y):
         print(ex)
 
 
-my_func1(2, -3)
+my_func1(2.2, -3)
 my_func2(2, -3)
