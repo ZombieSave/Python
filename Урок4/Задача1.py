@@ -3,7 +3,7 @@
 # значений необходимо запускать скрипт с параметрами.
 
 from sys import argv
-
+from decimal import Decimal
 
 def parse_input(func, value):
     """
@@ -38,13 +38,13 @@ if input_valid:
         input_valid = False
         print(f"Ошибка ввода выработки: {input_hh}. Значение должно быть целым числом.")
 
-    tariff, is_valid = parse_input(float, input_tariff)
+    tariff, is_valid = parse_input(Decimal, input_tariff)
 
     if not is_valid:
         input_valid = False
         print(f"Ошибка ввода ставки: {input_tariff}. Значение должно быть целым или дробным числом.")
 
-    award, is_valid = parse_input(float, input_award)
+    award, is_valid = parse_input(Decimal, input_award)
 
     if not is_valid:
         input_valid = False
