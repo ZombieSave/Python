@@ -5,6 +5,7 @@
 from sys import argv
 from decimal import Decimal
 
+
 def parse_input(func, value):
     """
     Функция валидации и преобразования строки в число
