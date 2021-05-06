@@ -1,4 +1,5 @@
 # Склад оргтехники
+from abc import ABC, abstractmethod
 
 
 class Storage:
@@ -94,7 +95,7 @@ class Item:
 # end class
 
 
-class Equipment:
+class Equipment(ABC):
     """
     Базовый клас товара
     """
