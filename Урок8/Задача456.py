@@ -104,19 +104,20 @@ class Equipment(ABC):
         :param equipment_type: принтер, сканер, копир
         :param brand: бренд производителя
         """
-        self.__brand = brand
-        self.__type = equipment_type
+        self._brand = brand
+        self._type = equipment_type
 
-    def __str__(self):
-        return f"{self.__type} \"{self.__brand}\""
+    @abstractmethod
+    def get_description(self):
+        pass
 
     @property
     def equipment_type(self):
-        return self.__type
+        return self._type
 
     @property
     def brand(self):
-        return self.__brand
+        return self._brand
 
     @staticmethod
     def get_equipment_type():
@@ -130,9 +131,8 @@ class Printer(Equipment):
         self.__printing_speed = printing_speed
         self.__print_type = print_type
 
-    def __str__(self):
-        description = super().__str__()
-        return f"{description}\nСкорость печати {self.__printing_speed} в минуту\nТип {Printer.print_types()[self.__print_type]}"
+    def get_description(self):
+        return f"{self._type} {self._brand}\nСкорость печати {self.__printing_speed} в минуту\nТип {Printer.print_types()[self.__print_type]}"
 
     @staticmethod
     def print_types():
@@ -145,9 +145,8 @@ class Scaner(Equipment):
         super().__init__("Сканер", brand)
         self.__scanning_speed = scanning_speed
 
-    def __str__(self):
-        description = super().__str__()
-        return f"{description}\nСкорость сканирования {self.__scanning_speed} в минуту"
+    def get_description(self):
+        return f"{self._type} {self._brand}\nСкорость сканирования {self.__scanning_speed} в минуту"
 # end class
 
 
@@ -156,9 +155,8 @@ class Xerox(Equipment):
         super().__init__("Копировальный аппарат", brand)
         self.__copy_speed = copy_speed
 
-    def __str__(self):
-        description = super().__str__()
-        return f"{description}\nСкорость копирования {self.__copy_speed} в минуту"
+    def get_description(self):
+        return f"{self._type} {self._brand}\nСкорость копирования {self.__copy_speed} в минуту"
 # end class
 
 
@@ -213,7 +211,7 @@ class WorkingStorage:
                             print(f"*** Товары в категории {key}:")
 
                             for item in self.__storage.all_items[key]:
-                                print(f"Id: {item.id}\n{item.equipment}\nЦена: {item.price}\nОтдел: {self.__storage.departments[item.department_id]}\n")
+                                print(f"Id: {item.id}\n{item.equipment.get_description()}\nЦена: {item.price}\nОтдел: {self.__storage.departments[item.department_id]}\n")
 
                     elif command == 2:
                         brand_str = input(">>>>> бренд производителя: ")
@@ -257,7 +255,7 @@ class WorkingStorage:
                         new_id = self.__storage.incoming(new_equipment, department_id, price)
                         item = self.__storage.get_item(new_id)
                         print("---------- Занесено на склад:")
-                        print(f"Id: {item.id}\n{item.equipment}\nВ отдел: {self.__storage.departments[item.department_id]}")
+                        print(f"Id: {item.id}\n{item.equipment.get_description()}\nВ отдел: {self.__storage.departments[item.department_id]}")
 
                     elif command == 3:
                         item_id_str = input("Id товара: ")
