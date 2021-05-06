@@ -261,20 +261,9 @@ class WorkingStorage:
                     elif command == 3:
                         item_id_str = input("Id товара: ")
                         item_id = int(item_id_str)
-
-                        print("---------- Выберите код отдела: ", end="")
-
-                        for dep in self.__storage.departments.items():
-                            print(f"{dep[1]} {dep[0]}, ", end="")
-
-                        department_id_str = input()
-                        department_id = int(department_id_str)
-
-                        if department_id in self.__storage.departments.keys():
-                            self.__storage.move_to_department(item_id, department_id)
-                            print(f"Товар Id = {item_id} передан в отдел {department_id}")
-                        else:
-                            raise StorageOperationError("Введён неверный код отдела")
+                        department_id = self.__input_department(self.__storage.departments)
+                        self.__storage.move_to_department(item_id, department_id)
+                        print(f"Товар Id = {item_id} передан в отдел {department_id}")
                 except ValueError:
                     raise StorageOperationError("Неверный ввод")
             except StorageOperationError as ex:
