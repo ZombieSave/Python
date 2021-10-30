@@ -12,6 +12,7 @@
 
 import requests
 from bs4 import BeautifulSoup
+import pandas as pd
 
 
 page = 0
@@ -25,7 +26,6 @@ search_text = input("Профессия: ")
 pages_count = input(f"Количество страниц в выдаче: ")
 
 while True:
-    print(f"Get page {page+1}")
     params = {"clusters": True,
               "area": 1,
               "ored_clusters": True,
@@ -41,39 +41,45 @@ while True:
 
         for vacancy in vacancies:
             vacancy_data = {}
-            vacancy_link = vacancy.find("a", {"class": "bloko-link"})
-            vacancy_name = vacancy_link.text
-            vacancy_link = vacancy_link["href"]
+            vacancy_link_tag = vacancy.find("a", {"class": "bloko-link"})
+            vacancy_name = vacancy_link_tag.text
+            vacancy_link = vacancy_link_tag["href"]
 
-            company_link = vacancy.find("a", {"class": "bloko-link bloko-link_secondary"})
+            company_link_tag = vacancy.find("a", {"class": "bloko-link bloko-link_secondary"})
 
-            if company_link is not None:
-                company = company_link.text
+            if company_link_tag is not None:
+                company = company_link_tag.text
             else:
                 company = ""
 
-            salary_span = vacancy.find(attrs={"data-qa": "vacancy-serp__vacancy-compensation"})
+            salary_span_tag = vacancy.find(attrs={"data-qa": "vacancy-serp__vacancy-compensation"})
 
-            if salary_span is not None:
-                salary = salary_span.text
+            if salary_span_tag is not None:
+                salary = salary_span_tag.text
             else:
                 salary = "не указана"
 
             vacancy_data = {"vacancy_name": vacancy_name,
                             "company": company,
                             "vacancy_link": vacancy_link,
-                            "salary": salary}
+                            "salary": salary,
+                            "from_site": base_url}
             result.append(vacancy_data)
 
-        if page == int(pages_count) - 1:
+        # выходим если достигнуто количество стрниц либо запрос ничего не выдаёт
+        if page == int(pages_count) - 1 or not vacancies or len(vacancies) == 0:
             break
         else:
             page += 1
+            print(f"Got page {page}")
     else:
         break
 
-for item in result:
-    print(f"Наименование вакансии: {item['vacancy_name']}")
-    print(f"Работодатель: {item['company']}")
-    print(f"Ссылка: {item['vacancy_link']}")
-    print(f"Зарплата: {item['salary']}\n\r")
+if result:
+    with open("hh_result.json", 'w') as file:
+        file.write(str(result))
+
+    table = pd.DataFrame(result, columns=["vacancy_name", "company", "vacancy_link", "salary", "from_site"])
+    print(table)
+else:
+    print("Ничего не найдено")
