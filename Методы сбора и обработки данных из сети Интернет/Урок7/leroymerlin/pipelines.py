@@ -42,12 +42,14 @@ class LeroymerlinDataPipeline:
 class LeroymerlinImagesPipeline(ImagesPipeline):
 
     def get_media_requests(self, item, info):
+        logger = logging.getLogger()
+
         if item[Fields.image_links]:
             for image in item[Fields.image_links]:
                 try:
                     yield scrapy.Request(image)
                 except Exception as ex:
-                    self.__logger.error(f"Ошибка получения изображения {ex}")
+                    logger.error(f"Ошибка получения изображения {ex}")
 
     def item_completed(self, results, item, info):
         # нам нужнен только путь
