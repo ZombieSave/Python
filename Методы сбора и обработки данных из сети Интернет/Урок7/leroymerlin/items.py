@@ -4,7 +4,7 @@ from itemloaders.processors import MapCompose, TakeFirst
 
 def process_price(value: str):
     try:
-        # строка цены имеет вид "123 Р шт.", в value приходит массив как после split(" ")
+        # строка цены имеет вид "1234 Р шт.", в value приходит массив как после split(" ")
         # конвертим в float то что конвертится, остальное отбрасываем в except
         value = float(value.replace(" ", ""))
     except:

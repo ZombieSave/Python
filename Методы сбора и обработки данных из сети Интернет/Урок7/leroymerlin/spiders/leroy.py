@@ -19,8 +19,8 @@ class LeroySpider(scrapy.Spider):
 
     def parse(self, response: HtmlResponse):
         try:
+            self.__logger.info(f"Загрузка страницы {response.url}")
             next_page = self.__get_next_page_url(response.url)
-            self.__logger.info(f"Загрузка страницы {next_page}")
             yield response.follow(next_page, self.parse)
 
             # если не делать /@href то почему-то в цикле из yield response.follow() не попадаем в callback

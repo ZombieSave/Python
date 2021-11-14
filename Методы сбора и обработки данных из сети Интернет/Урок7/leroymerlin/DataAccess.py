@@ -10,5 +10,6 @@ class DataAccess:
     def save_to_db(self, collection_name, item):
         collection = self.__db[collection_name]
 
-        if collection.count_documents({Fields.name: item[Fields.name]}) == 0:
+        # проверка уже существующего товара по арт. номеру
+        if collection.count_documents({Fields.article_number: item[Fields.article_number]}) == 0:
             collection.insert_one(item)
