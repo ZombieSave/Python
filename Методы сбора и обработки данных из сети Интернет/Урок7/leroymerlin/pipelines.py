@@ -40,6 +40,10 @@ class LeroymerlinDataPipeline:
 
 
 class LeroymerlinImagesPipeline(ImagesPipeline):
+    def __init__(self):
+        super().__init__(self)
+        self.__logger = logging.getLogger()
+
     def get_media_requests(self, item, info):
         if item[Fields.image_links]:
             for image in item[Fields.image_links]:
