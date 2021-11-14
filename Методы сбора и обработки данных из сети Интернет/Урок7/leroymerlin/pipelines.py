@@ -15,7 +15,7 @@ class LeroymerlinDataPipeline:
 
     def process_item(self, item, spider):
         try:
-            details = get_details(item[Fields.details])
+            details = self.__get_details(item[Fields.details])
             data = {Fields.name: item[Fields.name],
                     Fields.article_number: item[Fields.article_number],
                     Fields.link: item[Fields.link],
@@ -28,6 +28,15 @@ class LeroymerlinDataPipeline:
             self.__logger.error(f"Ошибка сохранения в БД: {ex}")
 
         return item
+
+    def __get_details(self, detail_list: []):
+        result = []
+
+        for i in range(0, len(detail_list)-1, 2):
+            result.append({Fields.param_name: detail_list[i],
+                           Fields.param_value: detail_list[i+1]})
+
+        return result
 
 
 class LeroymerlinImagesPipeline(ImagesPipeline):
@@ -51,12 +60,3 @@ class LeroymerlinImagesPipeline(ImagesPipeline):
         # папка "категория", подпапка "article_number" для каждого товара
         return f"full/{item[Fields.category]}/{item[Fields.article_number]}/{image_guid}.jpg"
 
-
-def get_details(details: []):
-    result = []
-
-    for i in range(0, len(details)-1, 2):
-        result.append({Fields.param_name: details[i],
-                       Fields.param_value: details[i+1]})
-
-    return result
