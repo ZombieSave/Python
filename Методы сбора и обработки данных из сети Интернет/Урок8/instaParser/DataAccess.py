@@ -35,7 +35,7 @@ class DataAccess:
     def get_followings(self, user_id):
         # для получения подписок пользователя, ищем его в user_id коллекции friendships
         followings = self.__db.friendships.find({"user_id": user_id})
-        user_filter = list(map(lambda x: x["friend_id"], followings))
+        user_filter = [x["friend_id"] for x in followings]
 
         return self.__db.users.find({"_id": {"$in": user_filter}})
 
@@ -43,6 +43,6 @@ class DataAccess:
     def get_followers(self, user_id):
         # для получения подписчиков пользователя, ищем его в friend_id коллекции friendships
         followers = self.__db.friendships.find({"friend_id": user_id})
-        user_filter = list(map(lambda x: x["user_id"], followers))
+        user_filter = [x["user_id"] for x in followers]
 
         return self.__db.users.find({"_id": {"$in": user_filter}})
