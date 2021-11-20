@@ -7,7 +7,11 @@ class DataAccess:
         self.__db = client[db_name]
 
     def save_user(self, user_id, username, full_name):
-        """данные пользователей в коллекции users"""
+        """данные пользователей в коллекции users
+           _id - id пользователя
+           username - login
+           full_name - имя в профиле
+        """
         data = {"_id": user_id,
                 "username": username,
                 "full_name": full_name}
@@ -31,14 +35,14 @@ class DataAccess:
     def get_followings(self, user_id):
         # для получения подписок пользователя, ищем его в user_id коллекции friendships
         followings = self.__db.friendships.find({"user_id": user_id})
-        user_filter = list(map(lambda x: {"_id": x["friend_id"]}, followings))
+        user_filter = list(map(lambda x: x["friend_id"], followings))
 
-        return self.__db.users.find({"$or": user_filter})
+        return self.__db.users.find({"_id": {"$in": user_filter}})
 
     #  5) Написать запрос к базе, который вернет список подписчиков только указанного пользователя
     def get_followers(self, user_id):
         # для получения подписчиков пользователя, ищем его в friend_id коллекции friendships
         followers = self.__db.friendships.find({"friend_id": user_id})
-        user_filter = list(map(lambda x: {"_id": x["user_id"]}, followers))
+        user_filter = list(map(lambda x: x["user_id"], followers))
 
-        return self.__db.users.find({"$or": user_filter})
+        return self.__db.users.find({"_id": {"$in": user_filter}})
