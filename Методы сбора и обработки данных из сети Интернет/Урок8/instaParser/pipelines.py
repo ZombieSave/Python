@@ -13,8 +13,10 @@ class InstaparserDataPipeline:
 
     def process_item(self, item, spider):
         try:
+            # сохраняем пользователя
             self.__da.save_user(item[Fields.friend_id], item[Fields.username], item[Fields.full_name])
 
+            # сохраняем подписку/подписчика
             if item[Fields.userId] != item[Fields.friend_id]:
                 self.__da.save_friendship(item[Fields.userId], item[Fields.friend_id])
         except Exception as ex:
