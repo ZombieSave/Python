@@ -1,0 +1,10 @@
+class Fields:
+    username = "username"
+    password = "password"
+    userId = "userId"
+    friend_id = "friend_id"
+    full_name = "full_name"
+    profile_pic_url = "profile_pic_url"
+    following = "following"
+    followers = "followers"
+    category = "category"
