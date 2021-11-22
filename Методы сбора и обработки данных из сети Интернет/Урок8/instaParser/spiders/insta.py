@@ -12,16 +12,15 @@ class InstaSpider(scrapy.Spider):
     allowed_domains = ['instagram.com']
     start_urls = ['https://www.instagram.com']
     login_request_url = "https://www.instagram.com/accounts/login/ajax/"
+    base_scroll_url = f"https://i.instagram.com/api/v1/friendships"
     insta_users = [{Fields.username: "trygfjfg", Fields.userId: 50338216673},
                    {Fields.username: "peremennikov", Fields.userId: 4145861687},
                    {Fields.username: "zombie_save", Fields.userId: 50105783705}]
     login = "zombie_save"
     full_name = "zombie save"
     password = "#PWD_INSTAGRAM_BROWSER:10:1637182169:AchQAJaHFl4sJaeVrm8tZ9NBzIa+wT6aGUD7WRhmH6r3ze0ifV3cFChNpDVJI0jiVbnyGlcB+AwQkURlRDx6BpNrnG5hHbk/r2cq6pbdGTrqJMv8IUtyfZ2ob5fZ/0tJBqKFfVmPDnt9DDNXLg=="
-
-    following = "following"
-    followers = "followers"
-    category = "category"
+    users = "users"
+    userAgent = "Instagram 155.0.0.37.107"
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -32,13 +31,12 @@ class InstaSpider(scrapy.Spider):
         X_CSRFToken = self.fetch_csrf_token(response.text)
 
         try:
-            yield scrapy.FormRequest(
-                self.login_request_url,
-                method="POST",
-                callback=self.login_response_callback,
-                headers={"X-CSRFToken": X_CSRFToken},
-                formdata={Fields.username: self.login,
-                          "enc_password": self.password})
+            yield scrapy.FormRequest(self.login_request_url,
+                                     method="POST",
+                                     callback=self.login_response_callback,
+                                     headers={"X-CSRFToken": X_CSRFToken},
+                                     formdata={Fields.username: self.login,
+                                               "enc_password": self.password})
         except Exception as ex:
             self.__logger.error(f"Ошибка авторизации: {ex}")
 
@@ -62,46 +60,55 @@ class InstaSpider(scrapy.Spider):
 
                     # получение списка подписок
                     while self.parse_state.get_continue_scroll_followings(user_id):
-                        yield self.friendship_scroll(response, user_id, self.following)
+                        yield self.following_scroll(response, user_id)
 
                     # получение списка подписчиков
                     while self.parse_state.get_continue_scroll_followers(user_id):
-                        yield self.friendship_scroll(response, user_id, self.followers)
+                        yield self.followers_scroll(response, user_id)
             else:
                 self.__logger.warning(f"Отказано в авторизации")
         except Exception as ex:
             self.__logger.error(f"Ошибка получения подписок/подписчиков: {ex}")
 
-    def friendship_scroll(self, response: HtmlResponse, userId, category):
-        """прокрутка списка подписок/подписчиков"""
-        base_url = f"https://i.instagram.com/api/v1/friendships/{userId}/"
-        # собираем следующий url прокрутки
-        if category == self.following:
-            max_id = self.parse_state.get_max_id(userId)
-            max_param = f"max_id={max_id}"
-        elif category == self.followers:
-            next_max_id = self.parse_state.get_next_max_id(userId)
-            max_param = "" if next_max_id is None else f"max_id={next_max_id}"
+    def following_scroll(self, response: HtmlResponse, userId):
+        max_id = self.parse_state.get_max_id(userId)
 
-        return response.follow(url=f"{base_url}{category}/?count=12&{max_param}",
-                               callback=self.scroll_response_callback,
-                               headers={"User-Agent": "Instagram 155.0.0.37.107"},
-                               cb_kwargs={Fields.userId: userId, self.category: category})
+        return response.follow(url=f"{self.base_scroll_url}/{userId}/following/?count=12&max_id={max_id}",
+                               callback=self.followings_scroll_response_callback,
+                               headers={"User-Agent": self.userAgent},
+                               cb_kwargs={Fields.userId: userId})
 
-    def scroll_response_callback(self, response: HtmlResponse, userId, category):
+    def followers_scroll(self, response: HtmlResponse, userId):
+        next_max_id = self.parse_state.get_next_max_id(userId)
+        max_param = "" if next_max_id is None else f"max_id={next_max_id}"
+
+        return response.follow(url=f"{self.base_scroll_url}/{userId}/followers/?count=12&{max_param}",
+                               callback=self.followers_scroll_response_callback,
+                               headers={"User-Agent": self.userAgent},
+                               cb_kwargs={Fields.userId: userId})
+
+    def followings_scroll_response_callback(self, response: HtmlResponse, userId):
         data = response.json()
-        users = data.get("users")
+        users = data.get(self.users)
         has_users = len(users) > 0
-
-        # сохраняем состояние прокрутки для каждого пользователя
-        if category == self.following:
-            self.parse_state.set_state_followings(userId, has_users, 12)
-        else:
-            next_max_id = data.get("next_max_id")
-            continue_parse_friendships = next_max_id is not None
-            self.parse_state.set_state_followers(userId, continue_parse_friendships, next_max_id)
+        self.parse_state.set_state_followings(userId, has_users, 12)
 
         if has_users:
+            for user in users:
+                yield InstaparserItem(userId=userId,
+                                      friend_id=user.get("pk"),
+                                      username=user.get(Fields.username),
+                                      full_name=user.get(Fields.full_name),
+                                      profile_pic_url=user.get(Fields.profile_pic_url))
+
+    def followers_scroll_response_callback(self, response: HtmlResponse, userId):
+        data = response.json()
+        users = data.get(self.users)
+        next_max_id = data.get("next_max_id")
+        has_next = next_max_id is not None
+        self.parse_state.set_state_followers(userId, has_next, next_max_id)
+
+        if len(users) > 0:
             for user in users:
                 yield InstaparserItem(userId=userId,
                                       friend_id=user.get("pk"),
